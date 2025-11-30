@@ -1,7 +1,3 @@
-# swaraj-n8n-projects
-All the workflows, Agents made my be using and testing n8n, to automate tasks make agents and help multiply my time and money
-# ⚙️ swaraj-n8n-projects
-
 Welcome to my collection of **n8n automation workflows and AI agents**!  
 This repo includes all my custom-built automations made for:
 - 🧠 Building smart AI agents with n8n
