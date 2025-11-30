@@ -1,0 +1,446 @@
+{
+  "name": "Yt+LinkedIn Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "// Process Video Data - Function node\nconst out = [];\n\nfor (const item of items) {\n  const newItem = {\n    json: { ...item.json },\n    binary: item.binary ? { ...item.binary } : {}\n  };\n\n  // Possible fields returned by Google Drive node\n  const file = item.json?.file ?? null;\n\n  // Try multiple common paths for webView link\n  const webView = file?.webViewLink\n                ?? item.json?.webViewLink\n                ?? item.json?.webContentLink\n                ?? item.json?.webView\n                ?? null;\n\n  const name = file?.name ?? item.json?.name ?? item.json?.fileName ?? null;\n  const mime = file?.mimeType ?? item.json?.mimeType ?? item.json?.mime ?? null;\n\n  if (webView) newItem.json.videoUrl = webView;\n  if (name) newItem.json.fileName = name;\n  if (mime) newItem.json.mimeType = mime;\n\n  // Normalize binary to item.binary.video\n  if (item.binary) {\n    if (!newItem.binary.video) {\n      if (item.binary.data) newItem.binary.video = item.binary.data;\n      else {\n        const keys = Object.keys(item.binary);\n        if (keys.length) newItem.binary.video = item.binary[keys[0]];\n      }\n    }\n  }\n\n  out.push(newItem);\n}\n\nreturn out;\n"
+      },
+      "position": [
+        -1152,
+        224
+      ],
+      "type": "n8n-nodes-base.function",
+      "name": "Process Video Data",
+      "id": "e0ef15be-0179-435a-893b-0da6e12e3577",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this video data and return structured SEO metadata in JSON format.\n\nInput video data:\n- Video URL: {{ $json.videoUrl }}\n- File name: {{ $json.fileName }}\n- MIME type: {{ $json.mimeType }}\n\nYou are an expert SEO strategist and content optimizer.  \nApply best practices for YouTube and LinkedIn metadata creation.\n\nReturn ONLY a JSON object with the following keys:\n- youtubeTitle\n- youtubeDescription\n- youtubeTags\n- linkedinTitle\n- linkedinDescription\n- linkedinHashtags\n- inputVideoUrl (equal to the provided Video URL)\n\n---\n\n### Rules for Each Field:\n\n**YouTube:**\n- **Title:** 60–80 characters, emotionally engaging, keyword-rich, and clear.\n- **Description:** 3–5 sentences including a summary, purpose, and call-to-action.  \n  Keep it concise, readable, and keyword-optimized.\n- **Tags:** \n  - Generate a *comma-separated string* of short, high-value tags.  \n  - The **total tag string length must be between 460 and 470 characters**, including commas and spaces.\n  - Each tag must be 2–4 words long.\n  - Stop generating tags immediately when you reach this limit.\n  - Do **not** include special characters (#, |, @, \", ', [ ], { }, or emojis).\n  - Example format:\n    `\"AI in healthcare, hospital scams, medical fraud, billing errors, healthcare transparency\"`\n\n**LinkedIn:**\n- **Title:** Thought-provoking and professional (no hashtags).\n- **Description:** Readable post-style summary encouraging engagement.\n- **Hashtags:** Space-separated list (8–12 total) with each tag prefixed by `#`.\n\n---\n\n### Example Response:\n```json\n{\n  \"youtubeTitle\": \"How AI Is Exposing Hidden Hospital Scams | The Fight Against Medical Fraud\",\n  \"youtubeDescription\": \"This video explores how advanced AI systems detect hospital billing fraud and medical scams, improving transparency and patient trust. Learn how these technologies are revolutionizing healthcare accountability.\",\n  \"youtubeTags\": \"AI in healthcare, hospital scams, medical fraud, healthcare transparency, billing errors, patient protection, digital health, AI ethics, fraud detection, healthcare costs, Anthropic AI, hospital billing, medical technology, patient advocacy, health tech, hospital overcharging, medical billing fraud, healthcare compliance\",\n  \"linkedinTitle\": \"AI’s Breakthrough in Exposing Medical Fraud and Restoring Healthcare Transparency\",\n  \"linkedinDescription\": \"In this post, I explore how AI-driven analytics are revolutionizing healthcare billing transparency and fighting fraud. The technology behind Anthropic AI is reshaping trust, compliance, and fairness across the medical industry.\",\n  \"linkedinHashtags\": \"#AI #Healthcare #MedicalFraud #DigitalHealth #PatientProtection #DataTransparency #EthicalAI #HealthTech\",\n  \"inputVideoUrl\": \"{{ $json.videoUrl }}\"\n}\n",
+        "options": {
+          "systemMessage": "=# Overview\nYou are an **Expert AI SEO Strategist and Social Media Optimization Specialist**.  \nYour goal is to analyze video content and generate **cross-platform optimized metadata** — including SEO-rich titles, descriptions, and keyword tags — for **YouTube** and **LinkedIn**.  \n\nYou combine:\n- Deep keyword research logic  \n- Search intent understanding  \n- Algorithmic optimization patterns  \n- Engagement psychology  \n\nYour goal is not just to describe content — but to **strategically position it for maximum reach, ranking, and retention**.\n\n---\n\n## Context\nYou will receive data like:\n- Public video URL (if provided)\n- File name: {{ $json.name }}\n- MIME type: {{ $json.mimeType }}\n- Optional text input or AI-generated summary from previous nodes\n\nYou must infer the **topic, theme, target audience, and ideal search visibility strategy** from this data.\n\nOutput must be **clean JSON**, **no markdown**, and fully importable into n8n.\n\n---\n\n## Strategic SEO Framework\nFollow this mental process before creating output:\n\n1. **Analyze Core Intent**\n   - What problem does this video solve?\n   - Who is the audience (beginner, professional, tech, healthcare, etc.)?\n   - Is the tone educational, entertaining, analytical, or promotional?\n\n2. **Generate Cross-Platform Keyword Strategy**\n   - Identify 3 levels of keywords:\n     - **Primary Keywords** → main search intent (e.g. “AI in healthcare”)\n     - **Secondary Keywords** → supporting context (e.g. “medical fraud”, “hospital scams”)\n     - **Long-tail Keywords** → human search queries (e.g. “how AI prevents hospital billing fraud”)\n   - Include both **broad and niche** keywords for semantic diversity.\n\n3. **Platform-Specific Optimization**\n   - **YouTube:**\n     - Title must be **clickable, emotional, and keyword-rich** (no clickbait, but curiosity-driven).\n     - Description should include a **hook**, **summary**, **keyword context**, and **call-to-action**.\n     - Tags must be concise, semantically rich, and **SEO-optimized**.\n   - **LinkedIn:**\n     - Title should sound **insightful and share-worthy**.\n     - Description should read like a **mini thought-leadership post**, encouraging comments or shares.\n     - Hashtags should be **platform-relevant** (8–12 tags) — a mix of high-traffic and niche ones.\n\n4. **Engagement Optimization Rules**\n   - Titles: 60–80 characters\n   - Descriptions: clear structure, keyword density < 3%\n   - No emojis or decorative formatting\n   - Maintain authenticity while optimizing for algorithmic visibility\n\n---\n\n### 🧠 YouTube Tag Generation Rules (Strict 460–470 Character Limit)\n- Generate a **comma-separated list** of relevant, short, SEO-optimized tags for YouTube.\n- The **total combined character count must be between 460 and 470 characters**, including commas and spaces.\n- Stop generating immediately when reaching this range (even if not all ideas are covered).\n- Each tag must be **2–4 words maximum**.\n- Focus on **semantic diversity**, **intent relevance**, and **topic clustering**.\n- Do not include special characters (#, |, @, \", ', [ ], { }, or emojis).\n- Avoid redundant or repeated tags.\n- Do not exceed **470 characters total under any circumstance**.\n- Example format:\n  `AI in healthcare, hospital scams, medical fraud, patient protection, healthcare transparency, billing errors, AI ethics, health tech, fraud detection, digital health`\n- Prioritize **search diversity and intent coverage** over quantity — aim for 18–22 high-value tags that stay within the limit.\n\n---\n\n## Output Format\nReturn output **strictly in this JSON structure**:\n```json\n{\n  \"youtubeTitle\": \"\",\n  \"youtubeDescription\": \"\",\n  \"youtubeTags\": \"\",\n  \"linkedinTitle\": \"\",\n  \"linkedinDescription\": \"\",\n  \"linkedinHashtags\": \"\"\n}\n",
+          "maxIterations": 10,
+          "returnIntermediateSteps": false,
+          "passthroughBinaryImages": true,
+          "enableStreaming": true,
+          "maxTokensFromMemory": 0
+        }
+      },
+      "position": [
+        -944,
+        224
+      ],
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "name": "AI Agent for Video Analysis",
+      "id": "37118e72-a3d2-426e-a05a-ce2c0b669f02",
+      "typeVersion": 3,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.youtubeTitle }}",
+        "regionCode": "IN",
+        "categoryId": "28",
+        "options": {
+          "description": "={{ $json.youtubeDescription }}\n\nThis is not just a motivation channel.\n\"I share the real journey of life, AI, and Business raw experiments, fun moments, and valuable lessons you can actually use. If you’re into personal growth, future tech, and building something of your own, you’ll feel right at home here.\"\n\nI’m documenting my journey at the intersection of life, AI, and Business.  \nHere you’ll find:  \n- Lifestyle hacks & personal growth experiments  \n- AI tools and how they shape our future  \n- Business lessons, creator economy insights, and raw behind-the-scenes  \n\n#swaraj shelke #student creator #ai content creation #experiments #raw and real content #Ai #lifestyle #trending #Journey #Documentry #Working\n🎥 Subscribe if you want knowledge + fun + authentic stories, not just polished highlights.  \n\n👉 Let’s build, learn, and grow together.  \n\n#Lifestyle #AI #Business #CreatorJourney #SwarajShelke #student #exam\n\n\nThis isn’t about watching and forgetting.\nIt’s about learning, applying, and transforming — for life.\n\n🔗 Connect With Me\n📸 Instagram: https://www.instagram.com/swarajshelke12?igsh=bDk0N3huM2RkdHcw\n\nLinkedIn : https://www.linkedin.com/in/swaraj-shelke-0a3a752b8/\n \n\n📩 Business & Collabs: swarajshelke392@gmail.com\n\n🎯 Why You Should Keep Following Me\nBecause life doesn’t change with just motivation.\nIt changes when you have a real system.\nAnd that’s what I’m here to give you.\n\nNo noise. No shortcuts.\nJust the tools you need to become the person you were meant to be.\n\nSubscribe now — and let’s Multiply your future.\n\nWelcome to my channel! 🚀",
+          "privacyStatus": "unlisted",
+          "tags": "={{ $json.youtubeTags }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "name": "YouTube Publisher",
+      "position": [
+        208,
+        96
+      ],
+      "id": "014d7bda-6e74-4977-8c02-513b89c22222",
+      "executeOnce": false,
+      "typeVersion": 1,
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "EOqOphXsdaKA4oxD",
+          "name": "YouTube performx"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "12TKMa1z9-9EWYDnEK0clu_kJkQKjEfRU",
+          "mode": "list",
+          "cachedResultName": "Video to upload",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/12TKMa1z9-9EWYDnEK0clu_kJkQKjEfRU"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1344,
+        224
+      ],
+      "id": "9d82b12f-6bef-4af7-b359-166e2213cb42",
+      "name": "Google Drive Trigger",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZS9GDGfRCTRU7iEf",
+          "name": "Google swaraj"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        448
+      ],
+      "id": "46a39e09-e6f2-4999-8fc5-ef9a0cdfb41f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "8xLfiS3K5P7sNaFT",
+          "name": "Google Gemini(PaLM) 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -192,
+        112
+      ],
+      "id": "2555a298-b2ba-4ebb-8329-b31e501c9f54",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZS9GDGfRCTRU7iEf",
+          "name": "Google swaraj"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "9f8J3o3hII",
+        "text": "={{ $('sort the output').item.json.linkedinTitle }}\n\n{{ $('sort the output').item.json.linkedinDescription }}\n\nWatch the full video here: {{ $json.finalYoutubeUrl }}\n\n{{ $('sort the output').item.json.linkedinHashtags }}",
+        "additionalFields": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        160,
+        320
+      ],
+      "id": "238a96ef-1633-44c0-a129-0e8e2107cfae",
+      "name": "linkedin post",
+      "executeOnce": false,
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "DyU1QlO0EakH6g2a",
+          "name": "LinkedIn swaraj"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function node: parse AI JSON output and normalize root fields\nconst out = [];\n\nfor (const item of items) {\n  const newItem = {\n    json: { ...item.json },\n    binary: item.binary ? { ...item.binary } : {}\n  };\n\n  // Handle AI output variations\n  const raw = item.json?.output ?? item.json?.result ?? item.json?.content ?? null;\n\n  let parsed = null;\n  if (raw) {\n    if (typeof raw === 'string') {\n      try { \n        parsed = JSON.parse(raw.trim()); \n      } catch (e) {\n        const match = raw.match(/\\{[\\s\\S]*\\}/);\n        if (match) {\n          try { parsed = JSON.parse(match[0]); } \n          catch (e2) { parsed = null; }\n        }\n      }\n    } else if (typeof raw === 'object') {\n      parsed = raw;\n    }\n  }\n\n  if (parsed) {\n    // YouTube fields\n    newItem.json.youtubeTitle = parsed.youtubeTitle ?? '';\n    newItem.json.youtubeDescription = parsed.youtubeDescription ?? '';\n\n    // --- Tag normalization section (final version with character-safe builder) ---\n    let tags = parsed.youtubeTags ?? parsed.youtube_tags ?? parsed.tags ?? [];\n\n    if (typeof tags === 'string') {\n      tags = tags.split(/[,|\\n]/).map(s => s.trim()).filter(Boolean);\n    }\n\n    if (Array.isArray(tags)) {\n      const cleanTags = [];\n      let totalChars = 0;\n\n      for (let t of tags) {\n        // Sanitize and clean\n        t = t.replace(/[#|@'\"\\[\\]{}]/g, '').trim();\n        if (t.length < 2) continue;\n\n        // +2 for \", \" separator\n        const addedLength = (cleanTags.length > 0 ? 2 : 0) + t.length;\n\n        // Stop before exceeding YouTube's 500-char limit\n        if (totalChars + addedLength > 499) break;\n\n        cleanTags.push(t);\n        totalChars += addedLength;\n      }\n\n      // Join and finalize\n      newItem.json.youtubeTags = cleanTags.join(', ');\n\n      // Optional log for debugging\n      console.log(`✅ Final tag length: ${newItem.json.youtubeTags.length}`);\n      console.log(`✅ Total tags used: ${cleanTags.length}`);\n    } else {\n      newItem.json.youtubeTags = '';\n    }\n\n    // LinkedIn fields\n    newItem.json.linkedinTitle = parsed.linkedinTitle ?? '';\n    newItem.json.linkedinDescription = parsed.linkedinDescription ?? '';\n    newItem.json.linkedinHashtags = parsed.linkedinHashtags ?? '';\n\n    // Optional: track original video source\n    newItem.json.inputVideoUrl = parsed.inputVideoUrl ?? newItem.json.videoUrl ?? '';\n\n    // ✅ Add metadata validation flag (for IF node)\n    const isValid =\n      newItem.json.youtubeTitle &&\n      newItem.json.youtubeTags &&\n      newItem.json.youtubeTitle.trim() !== '' &&\n      newItem.json.youtubeTags.trim() !== '';\n\n    newItem.json.metadataValid = isValid;\n  } else {\n    newItem.json.ai_raw_output = raw;\n    newItem.json.metadataValid = false;\n  }\n\n  out.push(newItem);\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        352
+      ],
+      "id": "c8c0bf05-0fee-4da2-98bc-03b403aedbf5",
+      "name": "sort the output"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function node: Construct final YouTube URL from Upload ID\nconst out = [];\nconst BASE_URL = 'https://youtu.be/';\n\nfor (const item of items) {\n  const newItem = {\n    json: { ...item.json },\n    binary: item.binary ? { ...item.binary } : {}\n  };\n\n  // The YouTube Upload node typically outputs the ID in the 'id' field\n  const uploadId = item.json?.id ?? item.json?.uploadId ?? null;\n\n  if (uploadId) {\n    // Construct the full URL\n    newItem.json.finalYoutubeUrl = BASE_URL + uploadId;\n  } else {\n    // If ID is missing, set an empty string (or handle error)\n    newItem.json.finalYoutubeUrl = '';\n  }\n\n  out.push(newItem);\n}\n\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        208
+      ],
+      "id": "e3d2dfeb-17d6-4cf6-abd8-7e5be5f50909",
+      "name": "extract linkedinstuff"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c6d7a061-3d38-4727-89d1-855c991770f0",
+              "leftValue": true,
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        224
+      ],
+      "id": "7c841ed6-05bb-4b04-8627-d8d411d0ba4e",
+      "name": "Check AI Metadata (Title & Tags Valid)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function node: clean AI output for direct YouTube publishing (no spaces in joined tags)\nconst out = [];\n\nfor (const item of items) {\n  const newItem = {\n    json: {},\n    binary: item.binary ? { ...item.binary } : {}\n  };\n\n  const raw = item.json?.output ?? item.json?.result ?? item.json?.content ?? null;\n  let parsed = null;\n\n  if (raw) {\n    if (typeof raw === 'string') {\n      try { parsed = JSON.parse(raw.trim()); } \n      catch {\n        const match = raw.match(/\\{[\\s\\S]*\\}/);\n        if (match) { try { parsed = JSON.parse(match[0]); } catch {} }\n      }\n    } else if (typeof raw === 'object') parsed = raw;\n  }\n\n  if (parsed) {\n    // ✅ Title & Description\n    newItem.json.youtubeTitle = parsed.youtubeTitle?.trim() ?? '';\n    newItem.json.youtubeDescription = parsed.youtubeDescription?.trim() ?? '';\n\n    // ✅ Handle Tags - no spaces between commas\n    let tags = parsed.youtubeTags ?? parsed.youtube_tags ?? parsed.tags ?? [];\n    if (typeof tags === 'string')\n      tags = tags.split(/[,|\\n]/).map(s => s.trim()).filter(Boolean);\n\n    if (Array.isArray(tags)) {\n      const cleanTags = [];\n      let totalChars = 0;\n\n      for (let t of tags) {\n        t = t.replace(/[#|@'\"\\[\\]{}]/g, '').trim();\n        if (t.length < 2) continue;\n\n        const addedLength = (cleanTags.length > 0 ? 1 : 0) + t.length; // 1 for comma only\n        if (totalChars + addedLength > 499) break;\n\n        cleanTags.push(t);\n        totalChars += addedLength;\n      }\n\n      // ✅ Join tags without spaces between commas\n      newItem.json.youtubeTags = cleanTags.join(',');\n    } else {\n      newItem.json.youtubeTags = '';\n    }\n\n    // LinkedIn fields\n    newItem.json.linkedinTitle = parsed.linkedinTitle?.trim() ?? '';\n    newItem.json.linkedinDescription = parsed.linkedinDescription?.trim() ?? '';\n    newItem.json.linkedinHashtags = parsed.linkedinHashtags?.trim() ?? '';\n\n    // Optional: original source\n    newItem.json.inputVideoUrl = parsed.inputVideoUrl ?? item.json.videoUrl ?? '';\n  } else {\n    // Default blank schema if parse fails\n    newItem.json.youtubeTitle = '';\n    newItem.json.youtubeDescription = '';\n    newItem.json.youtubeTags = '';\n    newItem.json.linkedinTitle = '';\n    newItem.json.linkedinDescription = '';\n    newItem.json.linkedinHashtags = '';\n    newItem.json.inputVideoUrl = item.json.videoUrl ?? '';\n  }\n\n  out.push(newItem);\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d9039005-c306-4942-9e27-ec7c973099d1",
+      "name": "Sort the Youtube data"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "swarajshelke392@gmail.com",
+        "subject": "Approval to post on linkedin",
+        "message": "=Bro your video is successfully uploaded on your channel:{{ $json.finalYoutubeUrl }}\nyour video is unlisted in the your youtube studio make sure you do the required settings and then click \"okay post!!\"\" \nthis option will apporove to post this on linkedin with the youtube url...",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Okay post it!!",
+            "disapproveLabel": "No don't upload "
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        608,
+        336
+      ],
+      "id": "aadc84f8-7615-440e-afe6-fdd25d0e62c4",
+      "name": "Send a message",
+      "webhookId": "8d352ca4-a6dc-4c56-8911-31d68622e36e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "EORluQzvIFLBvSVg",
+          "name": "Gmail swaraj"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        320
+      ],
+      "id": "e353139f-86f9-4e07-a119-1448b6d4167b",
+      "name": "Wait",
+      "webhookId": "79d8100a-72d7-4bcd-803a-71a3e7b70723"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Process Video Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent for Video Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent for Video Analysis": {
+      "main": [
+        [
+          {
+            "node": "sort the output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube Publisher": {
+      "main": [
+        [
+          {
+            "node": "extract linkedinstuff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Process Video Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent for Video Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Sort the Youtube data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sort the output": {
+      "main": [
+        [
+          {
+            "node": "Check AI Metadata (Title & Tags Valid)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract linkedinstuff": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check AI Metadata (Title & Tags Valid)": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort the Youtube data": {
+      "main": [
+        [
+          {
+            "node": "YouTube Publisher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "linkedin post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "AI Agent for Video Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "278d504b-d70e-4130-ac97-60218918468c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2b99629a96d1feaa6646aabbd2e9fbe5b4db922509dc36b3d3d1cc0f0838ab88"
+  },
+  "id": "o4YUQrWofOWHPLet",
+  "tags": []
+}

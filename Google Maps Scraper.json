@@ -1,0 +1,241 @@
+{
+  "name": "Google Maps Scraper",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://app.scrapingbee.com/api/v1/store/google",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "=RV6SL2BDMRET29XJMW0A1X3CFHM40KLQV3DHC08D5SINMV14EC6K5O3YDROLIP5EYHMGTBZYUSWCPOY8"
+            },
+            {
+              "name": "search",
+              "value": "={{ $json.googleQuery }}"
+            },
+            {
+              "name": "country_code",
+              "value": "in"
+            },
+            {
+              "name": "language",
+              "value": "en"
+            },
+            {
+              "name": "search_type",
+              "value": "classic"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        960,
+        272
+      ],
+      "id": "17347898-4d37-467f-95e0-24bb7afbb953",
+      "name": "google search"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        528,
+        272
+      ],
+      "id": "12375260-dc5f-4868-a5b0-6bb666abe54c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{(() => {\n  const input = $json[\"query\"] || \"\";\n  const lower = input.toLowerCase();\n\n  // Extract possible role, company/industry, and location keywords\n  const roles = [\"ceo\", \"cto\", \"founder\", \"manager\", \"director\", \"developer\", \"engineer\"];\n  const locations = [\"mumbai\", \"pune\", \"delhi\", \"bangalore\", \"maharashtra\", \"india\"];\n  const industries = [\"tech\", \"real estate\", \"finance\", \"marketing\", \"startup\", \"education\"];\n\n  // Find matches\n  const jobTitle = roles.find(r => lower.includes(r)) || \"\";\n  const companyIndustry = industries.find(i => lower.includes(i)) || \"\";\n  const location = locations.find(l => lower.includes(l)) || \"\";\n\n  // Construct the Google search query\n  const googleQuery = `site:linkedin.com/in \"${jobTitle}\" \"${companyIndustry}\" \"${location}\"`;\n\n  return {\n    jobTitle,\n    companyIndustry,\n    location,\n    googleQuery\n  };\n})()}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        272
+      ],
+      "id": "89f090d5-24a4-4e44-84a3-e8b822bdcbce",
+      "name": "parse query"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract LinkedIn URLs from the google search output\nreturn items.map(item => {\n  const organicResults = item.json.organic_results || [];\n  \n  // Map only URLs that contain 'linkedin.com/in/'\n  const urls = organicResults\n    .map(result => result.url)\n    .filter(url => url && url.includes('linkedin.com/in/'));\n  \n  // Return each URL as a separate item for next node (Google Sheet)\n  return urls.map(url => ({ json: { linkedinUrl: url } }));\n}).flat();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        272
+      ],
+      "id": "c863df52-95d0-47f2-9ad8-09752ffc8093",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rg_CX6vSoLxSNfMsldNBFlZg19qlwGFGsjf0UuyT99Q",
+          "mode": "list",
+          "cachedResultName": "linkedin url's from goole scraping",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rg_CX6vSoLxSNfMsldNBFlZg19qlwGFGsjf0UuyT99Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "LinkedIn url's",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rg_CX6vSoLxSNfMsldNBFlZg19qlwGFGsjf0UuyT99Q/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Profiles": "={{ $json.linkedinUrl }}"
+          },
+          "matchingColumns": [
+            "Profiles"
+          ],
+          "schema": [
+            {
+              "id": "Profiles",
+              "displayName": "Profiles",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        272
+      ],
+      "id": "05e6a985-272b-450d-98c4-19cd73f97455",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "9XsFyi0Saky6Ygn7",
+          "name": "Lead Generation"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "68a6fd3d-aceb-472a-b597-f6fca6bc4ade",
+              "name": "Response",
+              "value": "DONE!!!",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        272
+      ],
+      "id": "475e37db-84c0-4b23-8677-86ef35ea8579",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "parse query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse query": {
+      "main": [
+        [
+          {
+            "node": "google search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google search": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8aefe0ac-fa5e-4bdf-a9de-a6a653eb6c8a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f5a912e446219a712bdeb2567254f346cda024b57d2f4f1b37f8817c4d9efbb9"
+  },
+  "id": "GmKou9FiKhLDsHI2",
+  "tags": [
+    {
+      "updatedAt": "2025-11-26T03:21:37.924Z",
+      "createdAt": "2025-11-26T03:21:37.924Z",
+      "id": "U2ZZATsmoKuUqPOP",
+      "name": "linkedin url scraper"
+    }
+  ]
+}

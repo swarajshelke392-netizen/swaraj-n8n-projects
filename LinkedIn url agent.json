@@ -1,0 +1,162 @@
+{
+  "name": "LinkedIn url agent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "7e2eacbc-28d8-4e65-a9a6-3023cfcb61ee",
+      "name": "When chat message received",
+      "webhookId": "b0705758-72bb-43cf-9adf-93b5b01dde05"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "76ec46a8-aca5-4e3e-85d5-1c1b7afc83b4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        176
+      ],
+      "id": "0fb6c82f-a984-4c90-b251-2280e1233450",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        128,
+        176
+      ],
+      "id": "6d9f2423-e480-4c8c-a448-2b16204d3599",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "7Bxtn4bX7QASoxNR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to get linkedin profiles",
+        "workflowId": {
+          "__rl": true,
+          "value": "GmKou9FiKhLDsHI2",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/GmKou9FiKhLDsHI2",
+          "cachedResultName": "Google Maps Scraper"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        176
+      ],
+      "id": "1cf0fdd6-9028-490b-a5f1-1274da82cce6",
+      "name": "grab profiles"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "grab profiles": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "69918951-73ee-44ec-99ea-6be3eec3a949",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f5a912e446219a712bdeb2567254f346cda024b57d2f4f1b37f8817c4d9efbb9"
+  },
+  "id": "laBh1YuVRkJpnbqs",
+  "tags": [
+    {
+      "updatedAt": "2025-11-26T03:21:53.556Z",
+      "createdAt": "2025-11-26T03:21:53.556Z",
+      "id": "OH020hGUflHvxkav",
+      "name": "google map scraper"
+    }
+  ]
+}
