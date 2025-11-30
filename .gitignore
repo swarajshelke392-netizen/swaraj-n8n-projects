@@ -1,0 +1,5 @@
+# ignore any sensitive files
+*keys*
+*token*
+*credential*
+*.env
