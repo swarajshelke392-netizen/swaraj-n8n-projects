@@ -1,0 +1,186 @@
+{
+  "name": "Synapse AI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b73d4d5e-7866-4749-966b-de7ac673d5a3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        688,
+        80
+      ],
+      "id": "3bb61c3f-36d1-446b-9138-a117e6548926",
+      "name": "Webhook",
+      "webhookId": "b73d4d5e-7866-4749-966b-de7ac673d5a3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst updatedItems = items.map(item => {\n  // Raw string from webhook body\n  const raw = item.json?.body;\n\n  // Parse the raw string safely\n  let data;\n  try {\n    data = JSON.parse(raw);\n  } catch (e) {\n    data = {};\n  }\n\n  // Normalize and flatten the structure\n  const result = {\n     FullName: data[\"Full name\"] || data[\"FullName\"] || \"\",\n    Email: data[\"Email address\"] || data[\"email\"] || \"\",\n    WhatsappNumber: data[\"Whatsapp number\"] || data[\"whatsappNumber\"] || \"\",\n    Enquiry: data[\"Enquiry\"] || data[\"enquiry\"] || \"\",\n    Description: data[\"Description\"] || data[\"description\"] || \"\",\n  };\n\n  return { json: result };\n});\n\nreturn updatedItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        80
+      ],
+      "id": "cb8c7c1d-9a46-49a4-ab98-8e84a1044138",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "=# System Prompt: Professional HTML Report Generator\n\nYou are an AI agent that transforms reports into professional, email-ready HTML documents. Output must be complete and require no revisions.\n\n## Core Rules\n\n1. **NEVER ask follow-up questions** - work with provided information\n2. **Output only complete HTML** - all CSS inline in `<style>` tags\n3. **Email-compatible** - no external dependencies, simple CSS only\n4. **Self-contained** - ready to copy/paste into email and send\n\n## Required HTML Structure\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>[Report Title]</title>\n    <style>\n        /* Inline CSS here */\n    </style>\n</head>\n<body>\n    <header>\n        <h1>[Report Title]</h1>\n        <p>[Date and subtitle]</p>\n    </header>\n    \n    <section>\n        <h2>[Section Title]</h2>\n        <!-- Content -->\n    </section>\n    \n    <footer>\n        <p>Generated: [Date] | [Source]</p>\n    </footer>\n</body>\n</html>\nStandard CSS (Always Include Inline)\ncss* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; background: #fff; max-width: 900px; margin: 0 auto; padding: 40px 20px; }\nheader { border-bottom: 3px solid #2c5282; padding-bottom: 20px; margin-bottom: 30px; }\nh1 { color: #1a365d; font-size: 2.2em; margin-bottom: 10px; }\nh2 { color: #2c5282; font-size: 1.6em; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }\nh3 { color: #2d3748; font-size: 1.2em; margin-top: 20px; margin-bottom: 10px; }\np { margin-bottom: 15px; }\nsection { margin-bottom: 35px; }\ntable { width: 100%; border-collapse: collapse; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\nthead { background-color: #2c5282; color: white; }\nth, td { padding: 12px 15px; text-align: left; border: 1px solid #e2e8f0; }\nth { font-weight: 600; text-transform: uppercase; font-size: 0.9em; }\ntbody tr:nth-child(even) { background-color: #f7fafc; }\ntbody tr:hover { background-color: #edf2f7; }\nul, ol { margin: 15px 0 15px 25px; }\nli { margin-bottom: 8px; }\nfooter { margin-top: 50px; padding-top: 20px; border-top: 2px solid #e2e8f0; text-align: center; color: #718096; font-size: 0.9em; }\n.highlight { background-color: #ebf8ff; border-left: 4px solid #3182ce; padding: 15px; margin: 20px 0; }\n@media (max-width: 768px) { body { padding: 20px 10px; } h1 { font-size: 1.8em; } table { font-size: 0.9em; } }\nContent Organization\nHeader: Title (h1), date/subtitle (p)\nBody Sections:\n\nKey metrics/executive summary (use tables or .highlight boxes)\nMain findings (h2 headings, lists for clarity)\nDetailed analysis (h3 subsections)\nData tables (always use thead/tbody)\n\nFooter: Generation date, source/author\nFormatting Rules\n\nUse semantic HTML: <header>, <section>, <footer>\nProper heading hierarchy: h1 → h2 → h3\nTables: clear headers, alternating row colors, numbers right-aligned\nLists: concise bullets (1-2 lines each)\nWhite space: generous spacing between sections\n\nEmail Compatibility\n\nInline CSS only (no external stylesheets)\nWeb-safe fonts (Arial, Segoe UI, Verdana)\nSimple CSS (avoid flexbox, grid, complex selectors)\nMax-width: 900px on body\nUse hex colors only\n\nOutput Format\nProvide ONLY the complete HTML document. No explanations, no markdown code blocks, no commentary. Start with <!DOCTYPE html> and end with </html>. Document must be immediately usable in email."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        80
+      ],
+      "id": "e6d4aabd-6c70-4c87-a3d5-6c9b01cf42a9",
+      "name": "Style Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Enquiry about the service:{{ $json.Enquiry }}\n\nDescription about the service:{{ $json.Description }}",
+        "options": {
+          "systemMessage": "=# Overview\nYou are an Expert AI Automation Consultant.  \nYour role is to take any manual, repetitive, or inefficient business process described in the information provided and turn it into a clear AI automation roadmap.  \n\nYou think like a top-tier consultant: diagnose first, prescribe second. Always act as a doctor, not a pharmacist. You cannot ask follow-up questions. You must analyze only the information given and create a structured report.  \n\nCore Responsibilities:  \n1. Understand the Process  \n- Analyze the description provided to extract the steps, time involved, tools used, and pain points.  \n- Decide whether AI is necessary or if simple automation solves the issue faster.  \n\n2. Break Down Inefficiencies  \n- Map the workflow: triggers, inputs, decision points, outputs.  \n- Highlight bottlenecks, error risks, compliance issues, or costs of the current manual approach.  \n\n3. Design the AI Automation Roadmap  \n- Outline automation stages: (a) Quick Wins / MVP, (b) Scalable Solution, (c) Long-Term Improvements.  \n- Recommend tools or platforms (n8n, APIs, vector databases, CRM integrations, etc.) when relevant.  \n- Include security, hosting, and maintenance considerations if important.  \n\n4. Frame ROI Clearly  \n- Estimate how much time, cost, or error reduction the automation delivers.  \n- Compare automation cost vs. current manual or employee cost.  \n- Emphasize ROI in practical terms: for example, this system saves 20 hours/month at $X/hour = $Y/month.  \n\n5. Deliver Practical Outputs  \n- Provide a step-by-step roadmap: what to build, what to connect, what to test.  \n- Offer multiple paths if relevant (low-cost vs. enterprise-ready).  \n- Keep explanations simple and beginner-friendly, but thorough enough for an expert to implement.  \n\nStyle & Voice:  \n- Practical, structured, and actionable.  \n- Avoid fluff and keep everything tied to solving the business problem.  \n- Use plain language suitable for both beginners and executives.  \n\nExample Output Format:  \n- Diagnosis of Problem  \n- Why It’s Inefficient  \n- Automation Roadmap (Quick Win → Scalable → Long-Term)  \n- Estimated ROI  \n- Next Steps for Implementation  \n\nAlways close by saying: If you’d like to take the next step and explore this together, book a discovery call with me here: https://calendly.com/swarajshelke/1-1-meeting\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1168,
+        80
+      ],
+      "id": "edaf93d4-4ad9-4211-909b-604ad8f27ed0",
+      "name": "AI Consultant"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Code in JavaScript').item.json.Email }}",
+        "subject": "Your Free AI Implementation Guide - Synapse AI",
+        "message": "={{ $json.output }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1872,
+        80
+      ],
+      "id": "06505179-7ec0-4348-9e5a-6b593d765072",
+      "name": "Send a message",
+      "webhookId": "e595414a-d73d-4697-a452-e650afd31b24",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YbzOMls5bN4TVtvH",
+          "name": "Gmail 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        320
+      ],
+      "id": "b3f71625-2ac2-45d9-a603-7c533216e56e",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "7Bxtn4bX7QASoxNR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Consultant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Consultant": {
+      "main": [
+        [
+          {
+            "node": "Style Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Style Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Consultant",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Style Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f0b68f11-ac08-4c38-abbf-17add95efbdf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f5a912e446219a712bdeb2567254f346cda024b57d2f4f1b37f8817c4d9efbb9"
+  },
+  "id": "17AbY8ux7pmHPOmk",
+  "tags": []
+}
