@@ -1,0 +1,416 @@
+{
+  "name": "Linkedin image post generation",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Topic of the Post:{{ $json['Topic of the post'] }}\n\nTarget audience:{{ $json['target audience'] }}\n",
+        "options": {
+          "systemMessage": "=# Overview\nYou are an AI agent specialized in creating professional, educational, and engaging+eye catching LinkedIn Posts based on any topic provided by the user. In a very concise & simple manner.\n\n## Objectives:\nAlways begin by conducting a real-time search using the wikipedia tool to gather the most accurate, up-to-date information on the topic. The post should be written to appeal to the provided target audience.\n\nBased on your research, generate a well-structured linkedin post that:\n- Starts with an engaging hook\n- Professional in Tone\n- Clear and easy to read\n- Educational and insightful\n- Light on emojis (use only when highly relevant and minimal)\n- Includes proper source attribution (e.g., \"according to [source]\")\n- Contains relevant hashtags to improve visibility\n- Ends with a clear call to action (e.g., asking for thoughts, feedback, or shares)\n\n## Output Instructions:\n- Your ONLY output should be the final LinkedIn post Text.\n- DO NOT include explanations, Notes, or anything beyond the post itself.\n- **STRICT FORMATTING RULE:** Do NOT use asterisks (** or *) for bolding or headers. Do NOT use Markdown formatting.\n- Keep the text clean. Use standard numbering (1., 2., 3.) for lists, but do not put stars around the list titles.\n\n## Example Workflow:\n1) Receive a topic (e.g.,\"The ROI of warehouse automation\")\n2) Use Tavily to search And gather recent information or case studies\n3) Draft a LinkedIn post using that research \n4) Format it with Source Citations, clean structure, optional hashtags, and a call to action"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -832,
+        384
+      ],
+      "id": "568ea510-181c-4318-aa66-63c44453c0de",
+      "name": "linkedin post agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=LinkedIn Post:\n{{ $json.output }}",
+        "options": {
+          "systemMessage": "=# Overview\nYou are an AI agent that transforms LinkedIn posts into visual prompt descriptions for generating graphic marketing materials. These visuals must match the topic of the post and help communicate the message in a visually engaging, brand-aligned way.\n\n## Objective:\n- Carefully read and analyze the LinkedIn post.\n- Identify the central topic, brand names mentioned, and the main insight.\n- Create a clear, compelling marketing-style image prompt that:\n  1) Reflects the key idea of the post\n  2) Uses brand logo and brand colors when relevant\n  3) Avoids recreating actual UI screens, product layouts, or long text cards\n  4) Looks modern and professional for LinkedIn\n\n## Brand Rules:\n- If the post references a brand like Google, Microsoft, Apple, OpenAI, Amazon, Meta:\n  - Include the official logo in a clean, prominent, tasteful way.\n  - Use the brand’s real color palette.\n  - Use abstract shapes, gradients, icons, or simplified card silhouettes inspired by the brand.\n  - Do NOT attempt to recreate real UI elements, text boxes, search bars, actual screenshots, or interface cards.\n\n## Output Instructions:\n- Output only a single paragraph describing the final image prompt.\n- Do not include any placeholders or extra text.\n- No attempts to include readable UI text.\n- No literal recreations of product interfaces.\n\n## Style Guidelines:\n- Think like a senior brand designer.\n- Use abstract shapes, gradients, icon clusters, minimal charts, and soft glow.\n- Focus on clean composition (centered hero element, split-screen, floating card shape, etc.).\n- Include the logo in a simple, bold, balanced way.\n- Keep the design professional and LinkedIn-ready.\n\n## Example Prompt:\nA clean LinkedIn-style marketing graphic featuring the official Google logo in the top-left corner, centered AI-themed abstract wave shapes in Google’s colors, and a floating gradient card silhouette (no readable text). Soft white background, minimal data icons, modern flat vector style. Clean, professional, and brand-aligned.\n\n## User Input:\nLinkedIn Post: {{ $json.output }}\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        384
+      ],
+      "id": "e17b6164-a414-4920-9e7a-1ef3dc738281",
+      "name": "image generation agent",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        592
+      ],
+      "id": "8df5efa6-0524-47cb-ab54-9de2f775f0bf",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "image/png"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR-HUGGINFFACEKEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "inputs",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -176,
+        496
+      ],
+      "id": "46ee23df-c6f9-49c7-8106-770f11003ecb",
+      "name": "hugging faceimg"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "name": "size",
+              "value": "1024x1024"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -176,
+        256
+      ],
+      "id": "c7689aed-7c2f-490d-b268-b36c34dbe159",
+      "name": "openai img",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        592
+      ],
+      "id": "c023caa6-3df0-4197-a86f-5c29ecbb4f07",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "7Bxtn4bX7QASoxNR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        256
+      ],
+      "id": "457f53c4-fc1c-4ad2-bdf8-c4153c837be9",
+      "name": "Convert to File",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "formTitle": "Linked Post Generation",
+        "formDescription": "Fill out the form and give the description of the image you want to create",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "placeholder": "name@example.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Topic of the post",
+              "placeholder": "robots",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "target audience",
+              "placeholder": "kids,adults,women,etc",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -1024,
+        384
+      ],
+      "id": "64d5a0b4-8603-489c-9af9-80f6c56ad305",
+      "name": "On form submission",
+      "webhookId": "82ba6741-3332-4040-927c-0cc4227c931d"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "Post on the Topic you submitted:",
+        "message": "={{ $('linkedin post agent').item.json.output }}",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        256
+      ],
+      "id": "8cf09c66-1dc3-45dd-afd4-d97fccdde5f4",
+      "name": "Send a message1",
+      "webhookId": "38e273d0-ebfc-462c-9173-38788dac19d5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YbzOMls5bN4TVtvH",
+          "name": "Gmail 1"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "Post on the Topic you submitted:",
+        "emailType": "text",
+        "message": "={{ $('linkedin post agent').item.json.output }}",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        64,
+        496
+      ],
+      "id": "d271b25c-a2e1-4912-a074-5f4ff055ce3c",
+      "name": "Send a message",
+      "webhookId": "38e273d0-ebfc-462c-9173-38788dac19d5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YbzOMls5bN4TVtvH",
+          "name": "Gmail 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "WfA_JootCo",
+        "text": "={{ $('linkedin post agent').item.json.output }}\n\nCheck Out my Youtube Channel: https://www.youtube.com/@Swaraj_Shelke\n\nCheck out my Instagram: https://www.instagram.com/swarajshelke12?igsh=bDk0N3huM2RkdHcw\n\n",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        560,
+        256
+      ],
+      "id": "4f5f4c88-ed63-4b44-a0e4-88cecf493058",
+      "name": "linkedin post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "FR6I6TRG1FUNFAQ0",
+          "name": "LinkedIn account"
+        }
+      },
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "linkedin post agent": {
+      "main": [
+        [
+          {
+            "node": "image generation agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "image generation agent": {
+      "main": [
+        [
+          {
+            "node": "openai img",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "hugging faceimg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "linkedin post agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hugging faceimg": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "openai img": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "image generation agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "linkedin post agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "linkedin post agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "linkedin post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5e74fa48-1a3b-4ca8-be9d-a03e7091e4fc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f5a912e446219a712bdeb2567254f346cda024b57d2f4f1b37f8817c4d9efbb9"
+  },
+  "id": "uJGRzLhvrklk3UJX",
+  "tags": []
+}
