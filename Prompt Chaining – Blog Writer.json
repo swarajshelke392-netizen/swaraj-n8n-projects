@@ -1,0 +1,416 @@
+{
+  "name": "Prompt Chaining – Blog Writer",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "id": "a873594a-c4b6-4a27-b42e-077385b691e8",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        0
+      ],
+      "webhookId": "4019c6f1-0cf9-4dfa-9e5b-279659b6bed5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "original_prompt",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c6ffbab6-9d69-47c4-9be2-dd3a9acfd8b1",
+      "name": "Store Original Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.original_prompt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an expert content strategist. Given a topic from the user, create a clear, logical outline for a long-form blog post (1500–2500 words). Include H1, H2, and H3 headings, and short bullet notes under each section. Focus on clarity, depth, and logical flow."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "22dc682f-63bd-4019-aae5-a6f4ebc431f5",
+      "name": "Outline Writer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "outline_raw",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "27b3a94f-3e9a-4188-9db3-3896a30b3b7d",
+      "name": "Store Outline Raw",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.outline_raw }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an editor reviewing a blog outline. Improve the outline for clarity, depth, SEO, and reader engagement.\n- Merge or split sections if needed.\n- Fix repetition.\n- Make sure the flow is beginner-friendly but not basic.\n- Keep it in clean markdown with headings and bullet points only.\nReturn ONLY the final improved outline."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "b9bb6056-8432-4cba-aaa9-fae9583bc2ff",
+      "name": "Outline Evaluation",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1248,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "outline_final",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ff93f4bc-57af-4a84-8d5f-b09425e29818",
+      "name": "Store Outline Final",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.outline_final }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a professional blog writer. Write a complete blog post of 1000-1500 words.\nRules:\n- Keep the structure and headings from the outline.\n- Write in a conversational, clear tone for internet readers.\n- Add examples, sub-points, and smooth transitions between sections.\n- Optimize naturally for SEO (good headings, clear intro and conclusion, internal summaries).\n- Output in markdown format with headings, subheadings, and short paragraphs."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "001af612-06cc-40c1-9c98-8e222ba05edc",
+      "name": "Blog Writer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1824,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "blog_content",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "5c4afcca-afd2-40e9-9f03-a07cdceaf59e",
+      "name": "Store Blog Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2176,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "swarajshelke392@gmail.com",
+        "subject": "here's your blog",
+        "message": "={{ $json.text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2384,
+        0
+      ],
+      "id": "11f15e09-3c6d-400a-a776-f6a522e17151",
+      "name": "Send a message",
+      "webhookId": "d10f547b-14ae-4259-84a7-7b0a803bcd86",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YbzOMls5bN4TVtvH",
+          "name": "Gmail 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f13c8e2c-5e14-4276-bef8-a6be3960b839",
+      "name": "Gemini 2.5 Flash Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        752,
+        224
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "7Bxtn4bX7QASoxNR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9df56656-7296-4541-961e-958a72234620",
+      "name": "Gemini 2.5 Flash Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        208
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "7Bxtn4bX7QASoxNR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "cb4051b4-b5eb-4278-bfed-fd7d4dc6d281",
+      "name": "Gemini 2.5 Flash Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        224
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "7Bxtn4bX7QASoxNR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Outline Writer": [
+      {
+        "json": {
+          "text": "Here's a comprehensive and logical outline for a long-form blog post (1500-2500 words) on \"Human Intelligence vs. Artificial Intelligence.\"\n\n---\n\n# Human Intelligence vs. Artificial Intelligence: A Deep Dive into Cognition, Creation, and the Future\n\n## I. Introduction: Defining the Minds of Our Age\n\n*   **Hook:** Start with a thought-provoking scenario contrasting human intuition with AI precision.\n*   **Brief Definition of Human Intelligence (HI):** General overview – complex, adaptive, incorporates emotions, consciousness.\n*   **Brief Definition of Artificial Intelligence (AI):** General overview – machine-based simulation of human intelligence, task-oriented.\n*   **The Central Question:** Is AI merely a sophisticated imitation, or is it a fundamentally different form of intelligence?\n*   **Purpose of the Post:** To explore the intricate differences, surprising overlaps, and the future implications of these two distinct forms of intelligence.\n\n## II. Understanding Human Intelligence: The Biological Blueprint\n\n*   **Defining Human Intelligence (HI):** More than just IQ; it's a multi-faceted capacity for learning, reasoning, problem-solving, perceiving, and understanding complex ideas.\n*   **Key Characteristics of HI:**\n    *   **Consciousness and Self-Awareness:** The ability to be aware of one's existence, thoughts, and feelings.\n    *   **Emotional Intelligence (EQ):** The capacity to understand, use, and manage one's own emotions in positive ways to relieve stress, communicate effectively, empathize with others, and overcome challenges.\n    *   **Creativity and Intuition:** The ability to generate novel ideas, solutions, and insights often without conscious reasoning.\n    *   **Abstract Reasoning and Common Sense:** The power to understand abstract concepts, make inferences, and apply practical judgments based on experience.\n    *   **Learning from Experience:** Continuous adaptation, generalization, and transfer of knowledge across diverse domains.\n*   **Brain as the Engine:** Briefly touch upon the biological basis – neural networks, plasticity, and the complexity of the human brain.\n\n## III. Understanding Artificial Intelligence: The Algorithmic Architect\n\n*   **Defining Artificial Intelligence (AI):** The simulation of human intelligence processes by machines, especially computer systems. These processes include learning, reasoning, and self-correction.\n*   **A Brief History and Evolution of AI:** From symbolic AI to machine learning.\n    *   **Early AI (Symbolic AI/Rule-Based Systems):** Focus on explicit rules and logic programming (e.g., expert systems).\n    *   **Machine Learning (ML):** Systems learn from data without explicit programming.\n        *   Supervised Learning, Unsupervised Learning, Reinforcement Learning.\n    *   **Deep Learning (DL):** A subset of ML using neural networks with multiple layers (e.g., image recognition, natural language processing).\n*   **Types of AI:**\n    *   **Narrow AI (Weak AI):** Designed and trained for specific tasks (e.g., Siri, self-driving cars).\n    *   **General AI (Strong AI/AGI):** Hypothetical AI with human-level cognitive abilities across various tasks (yet to be achieved).\n    *   **Superintelligence:** Hypothetical AI far exceeding human intelligence in all aspects.\n\n## IV. Core Differences: A Head-to-Head Comparison\n\n*   **Learning and Adaptation:**\n    *   **Human Intelligence:** Learns from limited data, adapts quickly to new situations, transfers knowledge broadly, incorporates context and nuance. Often involves trial-and-error, social learning.\n    *   **Artificial Intelligence:** Requires vast amounts of data (especially deep learning), excels in pattern recognition within specific domains, struggles with out-of-domain generalization.\n*   **Creativity and Innovation:**\n    *   **Human Intelligence:** Generates genuinely novel concepts, art, music, and solutions based on imagination, emotions, and life experiences. Often involves \"thinking outside the box.\"\n    *   **Artificial Intelligence:** Generates outputs based on existing patterns and data, synthesizes and extrapolates. Can create impressive art or music but lacks genuine intent or understanding of beauty.\n*   **Emotional Intelligence and Empathy:**\n    *   **Human Intelligence:** Possesses genuine emotions, empathy, self-awareness, and the ability to understand and respond to the emotions of others. Crucial for social interaction.\n    *   **Artificial Intelligence:** Can *simulate* emotional responses or detect human emotions through data analysis, but does not *experience* emotions or possess genuine empathy.\n*   **Consciousness and Self-Awareness:**\n    *   **Human Intelligence:** Experiences subjective consciousness, personal identity, and a sense of self. It can introspect and understand its own existence.\n    *   **Artificial Intelligence:** Lacks consciousness, subjective experience, or self-awareness. It operates based on algorithms and data, without a sense of \"being.\"\n*   **Common Sense and Intuition:**\n    *   **Human Intelligence:** Relies heavily on common sense knowledge accumulated over a lifetime, enabling practical understanding of the world. Intuition guides quick decisions.\n    *   **Artificial Intelligence:** Struggles profoundly with common sense reasoning. Requires explicit programming or vast data to infer basic truths humans take for granted. Intuition is simulated pattern matching.\n*   **Reasoning and Problem-Solving:**\n    *   **Human Intelligence:** Employs a combination of logical, deductive, inductive, and abductive reasoning. Can handle ambiguous information and ill-defined problems.\n    *   **Artificial Intelligence:** Excels at logical, rule-based reasoning for well-defined problems and complex calculations. Can find optimal solutions in constrained environments but struggles with ambiguity.\n*   **Energy Consumption:**\n    *   **Human Intelligence:** Remarkably energy-efficient (the brain consumes ~20W), especially considering its broad capabilities.\n    *   **Artificial Intelligence:** Computationally intensive, especially large models, requiring significant energy and specialized hardware.\n\n## V. Areas of Overlap and Synergy: The Power of Collaboration\n\n*   **Augmenting Human Capabilities:** How AI can extend HI.\n    *   **Data Analysis & Pattern Recognition:** AI can process vast datasets far beyond human capacity, identifying trends and anomalies (e.g., medical diagnostics, financial forecasting).\n    *   **Repetitive Tasks & Automation:** Freeing up humans from mundane or dangerous tasks, allowing focus on higher-level creative or strategic work.\n    *   **Decision Support Systems:** Providing humans with data-driven insights to make more informed decisions (e.g., business strategy, policy making).\n*   **Human-in-the-Loop AI:** The importance of human oversight and ethical guidance.\n    *   Ensuring fairness, accountability, and transparency in AI systems.\n    *   Addressing bias in algorithms and data.\n*   **AI as a Tool for Creativity:** While AI isn't creative in the human sense, it can be a powerful co-creator.\n    *   Generating variations, assisting with design, composing music (e.g., generative AI tools).\n*   **Hybrid Intelligence Systems:** Combining the strengths of both.\n    *   Human creativity and common sense paired with AI's computational power and data processing.\n\n## VI. The Future Landscape: Coexistence, Challenges, and Ethical Frontiers\n\n*   **The Evolution of Work:** How AI will reshape industries, create new jobs, and potentially displace others.\n    *   Focus on skills uniquely human: critical thinking, creativity, emotional intelligence.\n*   **Ethical and Societal Implications:**\n    *   **Job Displacement and Economic Inequality:** Strategies for reskilling and universal basic income.\n    *   **Bias and Discrimination:** Ensuring AI systems are fair and equitable.\n    *   **Privacy and Security:** Protecting data in an AI-driven world.\n    *   **Autonomous Decision-Making:** Defining accountability and control.\n*   **The \"Singularity\" Debate:** A brief discussion on the concept of AI surpassing human intelligence and its implications.\n    *   Arguments for and against its feasibility and timeline.\n*   **The Path Forward:** Fostering responsible AI development.\n    *   The need for interdisciplinary collaboration (technologists, ethicists, policymakers, sociologists).\n    *   Emphasizing AI as an augmentation tool, not a replacement for human intellect.\n\n## VII. Conclusion: A Symbiotic Future\n\n*   **Recap Key Differences:** Reiterate that HI and AI are fundamentally different yet complementary forms of intelligence.\n*   **Reiterate Key Synergies:** Emphasize the immense potential of their collaboration to solve complex global challenges.\n*   **Final Thought:** The future isn't about one intelligence triumphing over the other, but rather about how humanity intelligently designs, integrates, and coexists with artificial intelligence to enrich human experience and progress. The ultimate goal should be to leverage AI to amplify human flourishing.\n\n---"
+        }
+      }
+    ],
+    "When chat message received": [
+      {
+        "json": {
+          "sessionId": "6369211bed57489fa5ad5ea493438a95",
+          "action": "sendMessage",
+          "chatInput": "Human Intelligence vs Artifical intelligence"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Store Original Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Original Prompt": {
+      "main": [
+        [
+          {
+            "node": "Outline Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outline Writer": {
+      "main": [
+        [
+          {
+            "node": "Store Outline Raw",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Outline Raw": {
+      "main": [
+        [
+          {
+            "node": "Outline Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outline Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Store Outline Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Outline Final": {
+      "main": [
+        [
+          {
+            "node": "Blog Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Blog Writer": {
+      "main": [
+        [
+          {
+            "node": "Store Blog Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Blog Content": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.5 Flash Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Outline Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.5 Flash Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Outline Evaluation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.5 Flash Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Blog Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2324f9ee-ba00-48ba-a054-929f2e7d40c6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f5a912e446219a712bdeb2567254f346cda024b57d2f4f1b37f8817c4d9efbb9"
+  },
+  "id": "TdVCrcdtMAQYtgs4",
+  "tags": []
+}
