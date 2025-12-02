@@ -3,7 +3,7 @@ This repo includes all my custom-built automations made for:
 - 🧠 Building smart AI agents with n8n
 - 📧 Email automation, scraping, and lead generation
 - ⚡ Workflow optimization for time and business scaling
-- 🤖 Connecting AI tools like OpenAI, Notion, LinkedIn, and Gmail
+- 🤖 Connecting AI tools like OpenAI, Google, LinkedIn, Gmail, etc..
 
 ---
 
