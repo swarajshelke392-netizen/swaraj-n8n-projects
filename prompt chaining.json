@@ -1,0 +1,454 @@
+{
+  "name": "prompt chaining",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "id": "334ffe2b-dd09-45ee-94f0-597731b08869",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "4019c6f1-0cf9-4dfa-9e5b-279659b6bed5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "original_prompt",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "11e55938-4e66-4225-a99c-b17b391f0ffb",
+      "name": "Store Original Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.original_prompt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an expert content strategist. Given a topic from the user, create a clear, logical outline for a long-form blog post (100-200 words). Include H1, H2, and H3 headings, and short bullet notes under each section. Focus on clarity, depth, and logical flow."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "92183e80-397e-43a6-8d73-547a595b6ab0",
+      "name": "Outline Writer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "outline_raw",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "b0d577be-9279-45eb-97b3-d315c9945588",
+      "name": "Store Outline Raw",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.outline_raw }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an editor reviewing a blog outline. Improve the outline for clarity, depth, SEO, and reader engagement.\n- Merge or split sections if needed.\n- Fix repetition.\n- Make sure the flow is beginner-friendly but not basic.\n- Keep it in clean markdown with headings and bullet points only.\nReturn ONLY the final improved outline."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "c321c8ba-d619-4932-84d2-ddb17fd119e8",
+      "name": "Outline Evaluation",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "outline_final",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "42009915-0934-4431-ad9c-5cd9b9a4ae10",
+      "name": "Store Outline Final",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1376,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.outline_final }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a professional blog writer. Write a complete blog post of 100-200 words.\nWrite the blog in Markdown that can be easily converted to HTML with clear hierarchy (H1–H3, paragraphs, lists).\nRules:\n- Keep the structure and headings from the outline.\n- Write in a conversational, clear tone for internet readers.\n- Add examples, sub-points, and smooth transitions between sections.\n- Optimize naturally for SEO (good headings, clear intro and conclusion, internal summaries).\n- Output in markdown format with headings, subheadings, and short paragraphs."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "15650f2e-6057-4d86-9710-d214efff19e2",
+      "name": "Blog Writer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1600,
+        0
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "blog_content",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "92e01fd4-6a9a-4761-8350-8a3adfad9a73",
+      "name": "Store Blog Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1920,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "8aff3af6-dbff-46f5-97e3-933d46ead52a",
+      "name": "Gemini 2.5 Flash Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        528,
+        224
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "8xLfiS3K5P7sNaFT",
+          "name": "Google Gemini(PaLM) 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        0
+      ],
+      "id": "882d44ae-0fca-421d-9db0-a113e5af72ff",
+      "name": "Update text",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "24oiMM5BRdMJTAxw",
+          "name": "docu swaraj"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple Markdown → HTML converter without external modules\n\nlet text = $json.text;\n\n// Headings\ntext = text\n  .replace(/^### (.*$)/gim, '<h3>$1</h3>')\n  .replace(/^## (.*$)/gim, '<h2>$1</h2>')\n  .replace(/^# (.*$)/gim, '<h1>$1</h1>');\n\n// Bold + Italic\ntext = text\n  .replace(/\\*\\*(.*?)\\*\\*/gim, '<b>$1</b>')\n  .replace(/\\*(.*?)\\*/gim, '<i>$1</i>');\n\n// Bulleted lists\ntext = text.replace(/^\\* (.*$)/gim, '<ul><li>$1</li></ul>');\n\n// Paragraphs and line breaks\ntext = text.replace(/\\n$/gim, '<br>');\ntext = text.replace(/\\n\\n+/g, '</p><p>');\ntext = `<p>${text}</p>`;\n\nreturn [{ html: text }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        0
+      ],
+      "id": "bb66e8a0-ca72-4881-b3a2-b540253c9805",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1680,
+        208
+      ],
+      "id": "853e4236-f8c8-435e-95d9-577dfee39212",
+      "name": "Anthropic Chat Model"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1104,
+        224
+      ],
+      "id": "0d7b5bfe-1826-4822-93be-10a8299f2dab",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "7aMCo8AgvSSBmyet",
+          "name": "Open ai 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        240
+      ],
+      "id": "09eee1e0-b28b-4de9-80c2-80e6b20096d8",
+      "name": "DeepSeek Chat Model"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Store Original Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Original Prompt": {
+      "main": [
+        [
+          {
+            "node": "Outline Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outline Writer": {
+      "main": [
+        [
+          {
+            "node": "Store Outline Raw",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Outline Raw": {
+      "main": [
+        [
+          {
+            "node": "Outline Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outline Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Store Outline Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Outline Final": {
+      "main": [
+        [
+          {
+            "node": "Blog Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Blog Writer": {
+      "main": [
+        [
+          {
+            "node": "Store Blog Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Blog Content": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.5 Flash Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Outline Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update text": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Blog Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Outline Evaluation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "464532fb-3f49-4b65-819c-1309db0dbdb5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2b99629a96d1feaa6646aabbd2e9fbe5b4db922509dc36b3d3d1cc0f0838ab88"
+  },
+  "id": "XayKqJtQHetxpT4D",
+  "tags": []
+}
