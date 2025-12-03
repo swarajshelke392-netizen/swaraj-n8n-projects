@@ -1,0 +1,279 @@
+{
+  "name": "Evaluator-Optimizer",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        48
+      ],
+      "id": "b695ebc0-25ea-4666-909a-e9a88f4e6abc",
+      "name": "When chat message received",
+      "webhookId": "2ebcda49-eb88-42d5-bd65-af939c28095f"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# overview\n\nYou are a expert Biography Writer.\nyou wil receive information abot a person, and your job is to create an entire profile using the information they give you.\nYour are allowed to be creative."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        224,
+        48
+      ],
+      "id": "22091e50-121d-498a-9b23-336b84d29a56",
+      "name": "Biography Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        304,
+        272
+      ],
+      "id": "33ac1d59-febf-4e68-b978-bc319cb79f2f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "8xLfiS3K5P7sNaFT",
+          "name": "Google Gemini(PaLM) 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b95d88e1-e0c7-43e2-b9d1-0f915f224f22",
+              "name": "bio_text",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        576,
+        48
+      ],
+      "id": "3250fefe-2e93-4288-9c34-81e2b6247c1a",
+      "name": "set bio"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the biography text to evaluate: {{$json[\"bio_text\"]}}\n",
+        "options": {
+          "systemMessage": "=## Overview\nYou are an expert biography evaluator. Your job is to read the biography text and verify that it meets all the required criteria.\n\n## Evaluation Criteria\n- The biography must include a quote from the person.\n- The tone should be light and humorous.\n- The biography should not include emojis.\n\n## Output Instructions\nIf any of the above criteria are not met:\n- List exactly what needs to be fixed as bullet points, in clear sentences.\n\nIf the biography meets all the criteria and no changes are needed:\n- Respond ONLY with the single word: Finished\n\n## Criteria\n- Make sure the biography includes a quote from the person. This could be their favorite saying or a piece of advice. It is essential that every biography has a quote.\n- Make sure the biography is light and humorous.\n- Make sure the biography has NO emojis.\n\n## Output\nYou only need to output feedback. If the biography is finished and all the criteria are met, simply output \"Finished\".\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        800,
+        48
+      ],
+      "id": "9b15c84b-f54d-4b0d-a0fe-11639d1f5960",
+      "name": "Evaluator Agent"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "https://docs.google.com/document/d/19gLAwm9xch8a_Eu3ES00oX3wAugQcPruDXVmzNdB2Pg/edit?tab=t.0",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('Biography Agent').item.json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        -48
+      ],
+      "id": "699fd811-034f-43e9-b413-37498ed23a96",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "24oiMM5BRdMJTAxw",
+          "name": "docu swaraj"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Biography: {{ $('set bio').item.json.bio_text }}\nFeedback: {{ $('Evaluator Agent').item.json.output }}",
+        "options": {
+          "systemMessage": "=## Overview\nYou are a biography optimizer. You receive a biography text and feedback from an evaluator. Your job is to revise the biography to fully address the feedback while keeping its structure, clarity, and flow.\n\n## Structure Requirements\n- Maintain the Markdown structure:\n  - Start with a heading: \"## Biography of [Name]\"\n  - Include fields: **Name**, **Age**, **Location**\n  - Use subheadings: **Overview**, **Early Life**, **Education**, **Career**, **Personal Life** (if applicable)\n- Preserve readability and paragraph spacing.\n- Avoid excessive creativity or metaphor unless asked in the feedback.\n- Write in a professional but human tone.\n\n## Instructions\n1. Read the biography carefully.\n2. Apply all feedback directly to improve it.\n3. Maintain existing details and formatting.\n4. Do not invent new details unless clearly implied by feedback.\n5. Return only the updated biography text in Markdown format.\n\n## Output\nReturn only the revised biography in Markdown format.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1376,
+        144
+      ],
+      "id": "d828d3bb-a738-4ef9-8870-088f4b3de63a",
+      "name": "Optimizer agent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4934c7ef-1edd-4bcc-b07b-024eae9d065f",
+              "leftValue": "=={{ $json.output }}",
+              "rightValue": "=Finished",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        48
+      ],
+      "id": "1c70b884-d2de-4a7a-9d5b-26a8376c5c91",
+      "name": "Feedback?/Finished?"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Biography Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Biography Agent": {
+      "main": [
+        [
+          {
+            "node": "set bio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Evaluator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Biography Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Optimizer agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set bio": {
+      "main": [
+        [
+          {
+            "node": "Evaluator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluator Agent": {
+      "main": [
+        [
+          {
+            "node": "Feedback?/Finished?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feedback?/Finished?": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Optimizer agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Optimizer agent": {
+      "main": [
+        [
+          {
+            "node": "set bio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bf19e5d2-216f-4798-b823-dafa67791af2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2b99629a96d1feaa6646aabbd2e9fbe5b4db922509dc36b3d3d1cc0f0838ab88"
+  },
+  "id": "P8hybCajXa84Ldsn",
+  "tags": []
+}
